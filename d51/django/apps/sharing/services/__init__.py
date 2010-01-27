@@ -1,6 +1,6 @@
 from d51.django.apps.sharing.utils import load_target_from_setting_with_key as load_target
 from django.conf import settings as django_settings
-from exceptions import ServiceNotImplemented
+from ..exceptions import ServiceNotImplemented
 SHARING_SERVICES_SETTINGS_KEY = 'D51_DJANGO_APPS_SHARING_SERVICES'
 
 class SharingServiceException(Exception):
@@ -27,7 +27,7 @@ class Service(object):
         raise ServiceNotImplemented
 
 def load_service(service_name, from_url):
-    from .providers import load_provider
+    from ..providers import load_provider
 
     provider = load_provider()
     return load_target(SHARING_SERVICES_SETTINGS_KEY, service_name)(service_name, from_url, provider)
