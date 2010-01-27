@@ -6,6 +6,7 @@ except ImportError:
 def main():
     settings = {
         "INSTALLED_APPS": (
+            "django.contrib.auth",
             "django.contrib.contenttypes",
             "d51.django.apps.sharing",
         ),
