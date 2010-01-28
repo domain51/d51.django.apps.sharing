@@ -1,6 +1,6 @@
 from django import forms
 from ..services import Service, ServiceForm
-from d51.django.auth.facebook.utils import get_facebook_api
+from d51.django.auth.facebook import utils
 from django.utils import simplejson
 
 class FacebookForm(ServiceForm):
@@ -15,7 +15,7 @@ class FacebookService(Service):
 
     def send_share(self, share):
         facebook_id = share.user.facebook.uid
-        facebook_api = get_facebook_api(for_uid=share.user.facebook.uid)
+        facebook_api = utils.get_facebook_api(for_uid=share.user.facebook.uid)
 
         attachment = {
             'name':share.title,

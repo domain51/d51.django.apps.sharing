@@ -2,12 +2,28 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from d51.django.apps.sharing.models import URL, Alternate, Share
 from d51.django.apps.sharing import services
+from dolt import Dolt
 from d51.django.apps.sharing import providers 
 from django.db.models.query import QuerySet
 import random
 import mox
 from django.conf import settings as django_settings
 from d51.django.apps.sharing.utils import load_target_from_setting_with_key as load_target
+
+class EasyRandom(object):
+    @property
+    def random(self):
+        if getattr(self, '_random', None) is not None:
+            del self._random
+        return random.randint(1,100)
+
+    @property
+    def random_string(self):
+        if getattr(self, '_random_string', None) is not None:
+            del self._random_string
+        return 'rand-%d'%self.random
+_ = EasyRandom()
+
 
 class TestOfServiceObject(TestCase):
     def setUp(self):
@@ -17,8 +33,8 @@ class TestOfServiceObject(TestCase):
         self.mox.UnsetStubs()
 
     def test_of_init(self):
-        name = 'rand-%d' % random.randint(1,1000)
-        random_provider = 'rand-prov-%d' % random.randint(1,1000)
+        name = 'rand-%d' % _.random
+        random_provider = 'rand-prov-%d' % _.random
         fake_url = URL()
         fake_settings = object()
         self.mox.ReplayAll()
@@ -29,7 +45,7 @@ class TestOfServiceObject(TestCase):
         self.mox.VerifyAll()
 
     def test_of_find_available_alternates(self):
-        random_result = 'rand-%d' % random.randint(1,1000)
+        random_result = 'rand-%d' % _.random
         provider = providers.Provider("provider_name")
 
         url = self.mox.CreateMock(URL)
@@ -42,10 +58,10 @@ class TestOfServiceObject(TestCase):
 
     def test_of_create_share_with_no_existing_alternate(self):
         user = User.objects.create(
-            username='random-%d'%random.randint(1,1000)
+            username='random-%d'%_.random
         )
-        random_name = 'rand-%d'%random.randint(1,1000)
-        service_random_name = 'rand-%d'%random.randint(1,1000)
+        random_name = 'rand-%d'%_.random
+        service_random_name = 'rand-%d'%_.random
         provider = providers.Provider(random_name)
 
         fake_form = self.mox.CreateMock(type)
@@ -70,10 +86,10 @@ class TestOfServiceObject(TestCase):
 
     def test_of_create_share_with_existing_alternate(self):
         user = User.objects.create(
-            username='random-%d'%random.randint(1,1000)
+            username='random-%d'%_.random
         )
-        random_name = 'rand-%d'%random.randint(1,1000)
-        service_random_name = 'rand-%d'%random.randint(1,1000)
+        random_name = 'rand-%d'%_.random
+        service_random_name = 'rand-%d'%_.random
         provider = providers.Provider(random_name)
 
         fake_form = self.mox.CreateMock(type)
@@ -113,7 +129,7 @@ class TestOfServiceFunctions(TestCase):
     def test_of_load_service(self):
         self.mox.StubOutWithMock(services, 'load_target')
         self.mox.StubOutWithMock(providers, 'load_provider')
-        random_name = 'random-name-%d'%random.randint(1,1000)
+        random_name = 'random-name-%d'%_.random
         mock_service = self.mox.CreateMock(services.Service) 
         services.load_target(services.SHARING_SERVICES_SETTINGS_KEY, random_name).AndReturn(mock_service.__class__)
         providers.load_provider.__call__().AndReturn(None)
@@ -128,15 +144,106 @@ class TestOfServiceFunctions(TestCase):
         self.mox.VerifyAll()
 
     def test_of_create_share(self):
-        random_name = 'random-name-%d'%random.randint(1,1000)
+        random_name = 'random-name-%d'%_.random
         mock_service = self.mox.CreateMock(services.Service) 
         mock_url = self.mox.CreateMock(URL)
         mock_user = self.mox.CreateMock(User)
         self.mox.StubOutWithMock(services, 'load_service')
         services.load_service(random_name, mock_url).AndReturn(mock_service)
-        mock_service.create_share(mock_user, mock_url, {}).AndReturn(random_name)
+        mock_service.create_share(mock_user, {}).AndReturn(random_name)
         self.mox.ReplayAll()
         results = services.create_share(random_name, mock_user, mock_url, {})
         self.assertEqual(results, random_name)
         self.mox.VerifyAll()
+
+from ..services.facebook import FacebookService, FacebookForm
+from ..services.twitter import TwitterService, TwitterForm 
+
+class TestOfTwitterService(TestCase):
+    def setUp(self):
+        self.mox = mox.Mox()
+
+    def tearDown(self):
+        self.mox.UnsetStubs()
+
+    def test_of_get_form_class(self):
+        service = TwitterService(None, None, None)
+        self.assertEqual(service.get_form_class(), TwitterForm)
+
+    def test_of_send_share(self):
+        from d51.django.auth.twitter import utils, models
+
+        random_value = _.random
+        random_string = 'random thing to say no. %d' % _.random
+
+        user = User.objects.create(
+            username='rand-%d'%_.random
+        )
+        user.twitter = self.mox.CreateMock(models.TwitterToken)
+        user.twitter.get_oauth_token().AndReturn(random_value)
+
+        alternate = Alternate()
+        alternate.url = random_string
+
+        share = Share()
+        share.alternate = alternate
+        share.user = user
+        share.title = random_string
+
+        dolt_mock = self.mox.CreateMock(Dolt)
+        dolt_mock.statuses = self.mox.CreateMock(Dolt)
+        dolt_mock.statuses.update = self.mox.CreateMock(Dolt)
+        dolt_mock.statuses.update.POST = self.mox.CreateMock(Dolt)
+        dolt_mock.statuses.update.POST(status='%s %s' % (share.title, random_string))
+        self.mox.StubOutWithMock(utils, 'get_twitter_api')
+        utils.get_twitter_api(token=random_value).AndReturn(dolt_mock)
+
+        self.mox.ReplayAll()
+        service = TwitterService(None, None, None)
+        service.send_share(share)
+        self.mox.VerifyAll()
         
+class TestOfFacebookService(TestCase):
+    def setUp(self):
+        self.mox = mox.Mox()
+
+    def tearDown(self):
+        self.mox.UnsetStubs()
+
+    def test_of_get_form_class(self):
+        service = FacebookService(None, None, None)
+        self.assertEqual(service.get_form_class(), FacebookForm)
+
+    def test_send_share(self):
+        from d51.django.auth.facebook import utils, models
+
+        user = User.objects.create(
+            username=_.random_string
+        )
+        user.facebook = models.FacebookID()
+        user.facebook.uid = _.random
+        self.mox.StubOutWithMock(utils, 'get_facebook_api')
+
+        alternate = Alternate()
+        alternate.url = _.random_string
+
+        share = Share()
+        share.user = user
+        share.alternate = alternate
+        share.title, share.description = _.random_string, _.random_string
+
+        fake_attachment = {
+            'name':share.title,
+            'href':share.alternate.url,
+            'description':share.description
+        }
+
+        mock_facebook = self.mox.CreateMock(Dolt)
+        mock_facebook.stream = self.mox.CreateMock(Dolt)
+        mock_facebook.stream.publish = self.mox.CreateMock(Dolt)
+        mock_facebook.stream.publish(attachment=fake_attachment, uid=str(user.facebook.uid))
+        utils.get_facebook_api(for_uid=user.facebook.uid).AndReturn(mock_facebook)
+        self.mox.ReplayAll()
+        service = FacebookService(None, None, None)
+        service.send_share(share)
+        self.mox.VerifyAll()
