@@ -14,7 +14,7 @@
         jQuery(function () {
         jQuery('#facebook-form input[type=submit]').click(function(event) {
             event.preventDefault();
-            var form = jQuery('#facebook-form').parent();
+            var form = jQuery('#facebook-form');
             FB.Connect.showPermissionDialog('publish_stream', function(perms) {
                 if(!perms) {
                     window.location = window.location.host + "{{ next }}";
