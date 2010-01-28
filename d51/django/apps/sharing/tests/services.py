@@ -48,6 +48,12 @@ class TestOfServiceObject(TestCase):
         service_random_name = 'rand-%d'%random.randint(1,1000)
         provider = providers.Provider(random_name)
 
+        fake_form = self.mox.CreateMock(type)
+        fake_form_instance = self.mox.CreateMock(services.ServiceForm)
+        fake_form.__call__({}).AndReturn(fake_form_instance)
+        fake_form_instance.is_valid().AndReturn(True)
+        fake_form_instance.contrib_dict_to_share().AndReturn({})
+
         mock_alternate = self.mox.CreateMock(Alternate)
         mock_alternate.shares = self.mox.CreateMock(Share.objects.__class__)
 
@@ -59,7 +65,7 @@ class TestOfServiceObject(TestCase):
 
         service = services.Service(service_random_name, url, provider)
         self.mox.ReplayAll()
-        service.create_share(user)
+        service.create_share(user, {}, fake_form)
         self.mox.VerifyAll()
 
     def test_of_create_share_with_existing_alternate(self):
@@ -70,6 +76,11 @@ class TestOfServiceObject(TestCase):
         service_random_name = 'rand-%d'%random.randint(1,1000)
         provider = providers.Provider(random_name)
 
+        fake_form = self.mox.CreateMock(type)
+        fake_form_instance = self.mox.CreateMock(services.ServiceForm)
+        fake_form.__call__({}).AndReturn(fake_form_instance)
+        fake_form_instance.is_valid().AndReturn(True)
+        fake_form_instance.contrib_dict_to_share().AndReturn({})
         mock_alternate = self.mox.CreateMock(Alternate)
         mock_alternate.shares = self.mox.CreateMock(Share.objects.__class__)
 
@@ -85,7 +96,7 @@ class TestOfServiceObject(TestCase):
 
         service = services.Service(service_random_name, url, provider)
         self.mox.ReplayAll()
-        service.create_share(user)
+        service.create_share(user, {}, fake_form)
         self.mox.VerifyAll()
 
     def test_unimplemented(self):
@@ -123,9 +134,9 @@ class TestOfServiceFunctions(TestCase):
         mock_user = self.mox.CreateMock(User)
         self.mox.StubOutWithMock(services, 'load_service')
         services.load_service(random_name, mock_url).AndReturn(mock_service)
-        mock_service.create_share(mock_user, mock_url).AndReturn(random_name)
+        mock_service.create_share(mock_user, mock_url, {}).AndReturn(random_name)
         self.mox.ReplayAll()
-        results = services.create_share(random_name, mock_user, mock_url)
+        results = services.create_share(random_name, mock_user, mock_url, {})
         self.assertEqual(results, random_name)
         self.mox.VerifyAll()
         

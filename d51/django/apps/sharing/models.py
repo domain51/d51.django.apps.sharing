@@ -18,17 +18,16 @@ class Sender(object):
     def __call__(self):
         self.prepare()
         self.send()
-default_sender = Sender
 
 class URL(models.Model):
     url = models.URLField()
 
-    def send(self, service_name, from_user):
-        share = self.share_to_service(service_name, from_user)
-        return share.send()
+    def send(self, service_name, from_user, with_post, with_sender_class=Sender):
+        share = self.share_to_service(service_name, from_user, with_post)
+        return share.send(with_sender_class)
 
-    def share_to_service(self, service_name, from_user):
-        return services.create_share(service_name, from_user, from_url=self)
+    def share_to_service(self, service_name, from_user, post_data):
+        return services.create_share(service_name, from_user, from_url=self, with_post=post_data)
 
 class Alternate(models.Model):
     original_url = models.ForeignKey(URL, related_name='alternates') 
@@ -47,11 +46,13 @@ class Share(models.Model):
     is_fulfilled = models.BooleanField(default=False)
     user = models.ForeignKey(User)
     service = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
 
     def get_service(self):
         return services.load_service(self.service, self.alternate.original_url)
 
-    def send(self, with_sender_class=Sender):
+    def send(self, with_sender_class):
         if self.is_fulfilled:
             raise SomeBadError 
         return with_sender_class(self)()

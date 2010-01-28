@@ -1,0 +1,30 @@
+{% extends "sharing/base.html" %}
+
+
+{% block sharing_content %}
+<h1>HOWDY FACEBOOK USER</h1>
+<form id="{{ service_name }}-form" method="POST" action="{% url share_url service_name %}?next={{ next }}&{{ SHARE_KEY }}={{ url }}">
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock %}
+
+{% block sharing_javascript %}
+    <script type="text/javascript">
+        jQuery(function () {
+        jQuery('#facebook-form input[type=submit]').click(function(event) {
+            event.preventDefault();
+            var form = jQuery('#facebook-form').parent();
+            FB.Connect.showPermissionDialog('publish_stream', function(perms) {
+                if(!perms) {
+                    window.location = window.location.host + "{{ next }}";
+                } else {
+                    form.submit();
+                }
+            });
+
+        });
+        });
+    </script>
+{% endblock %}

@@ -8,7 +8,7 @@ def load_target_from_module(location):
         module, target = get_module_and_target(location)
         module = import_module(module)
         target = getattr(module, target, None)
-        if target_obj is None:
+        if target is None:
             raise ImproperlyConfigured('%s is not defined in %s' % get_module_and_target(location)) 
         return target
     except ImportError as e:

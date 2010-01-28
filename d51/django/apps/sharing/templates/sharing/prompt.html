@@ -1,0 +1,11 @@
+{% extends "sharing/base.html" %}
+
+
+{% block sharing_content %}
+
+<form id="{{ service_name }}-form" method="POST" action="{% url share_url service_name %}?next={{ next }}&{{ SHARE_KEY }}={{ url }}">
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock %}
