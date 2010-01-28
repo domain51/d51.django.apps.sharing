@@ -24,7 +24,8 @@ def share_url(request, service_name):
             url.send(service_name, request.user, request.POST)
         except SharingServiceInvalidForm:
             service = load_service(service_name, url)
-            form = service.get_form_class()(request.POST)
+            input = [] if request.method != 'POST' else [request.POST]
+            form = service.get_form_class()(*input)
             templates, context = [ 
                 'sharing/%s/prompt.html'%service_name,
                 'sharing/prompt.html' 
