@@ -2,7 +2,6 @@
 
 
 {% block sharing_content %}
-<h1>HOWDY FACEBOOK USER</h1>
 <form id="{{ service_name }}-form" method="POST" action="{% url share_url service_name %}?next={{ next }}&{{ SHARE_KEY }}={{ url }}">
     {{ form.as_p }}
     <input type="submit" value="Submit" />
