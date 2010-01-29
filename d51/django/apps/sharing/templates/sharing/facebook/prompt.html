@@ -13,17 +13,23 @@
     <script type="text/javascript">
         jQuery(function () {
         jQuery('#facebook-form input[type=submit]').click(function(event) {
-            event.preventDefault();
-            var form = jQuery('#facebook-form');
-            FB.Connect.showPermissionDialog('publish_stream', function(perms) {
-                if(!perms) {
-                    window.location = window.location.host + "{{ next }}";
-                } else {
-                    form.submit();
-                }
-            });
+                event.preventDefault();
+                var form = jQuery('#facebook-form');
+                FB.ApiClient('{{ FACEBOOK_API_KEY }}').users_hasAppPermission('publish_stream', function (has_permission) {
+                    if(has_permission) {
+                        form.submit();
+                    } else {
+                        FB.Connect.showPermissionDialog('publish_stream', function(perms) {
+                            if(!perms) {
+                                window.location = window.location.host + "{{ next }}";
+                            } else {
+                                form.submit();
+                            }
+                        });
 
-        });
+                    }
+                })
+            });
         });
     </script>
 {% endblock %}
