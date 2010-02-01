@@ -11,9 +11,12 @@ SHARE_KEY='u'
 
 @auth_required()
 def share_url(request, service_name):
+    # TODO: this view needs testing
+
     response = HttpResponseRedirect(request.GET.get('next', '/'))
     url_to_share = request.GET.get(SHARE_KEY, None)
     if url_to_share is None:
+        # TODO change to a 400
         raise Http404
     else:
         full_url_to_share = 'http://%s%s' % ((Site.objects.get_current().domain, url_to_share))

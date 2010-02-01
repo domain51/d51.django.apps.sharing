@@ -12,6 +12,7 @@ class SharingServiceInvalidForm(SharingServiceException):
 
 class ServiceForm(forms.Form):
     def contrib_dict_to_share(self):
+        # TODO This needs to be renamed to something more appropriate
         raise ServiceNotImplemented
 
 class Service(object):
