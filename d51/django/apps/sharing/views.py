@@ -15,11 +15,12 @@ def share_url(request, service_name):
 
     response = HttpResponseRedirect(request.GET.get('next', '/'))
     url_to_share = request.GET.get(SHARE_KEY, None)
+
     if url_to_share is None:
         # TODO change to a 400
         raise Http404
     else:
-        full_url_to_share = 'http://%s%s' % ((Site.objects.get_current().domain, url_to_share))
+        full_url_to_share = 'http://%s%s' % ((Site.objects.get_current().domain, url_to_share)) if url_to_share.find('http:') == -1 else url_to_share
         url, created = URL.objects.get_or_create(
                 url=full_url_to_share,
         )
