@@ -20,7 +20,7 @@ def share_url(request, service_name):
         # TODO change to a 400
         raise Http404
     else:
-        full_url_to_share = 'http://%s%s' % ((Site.objects.get_current().domain, url_to_share)) if url_to_share.find('http:') == -1 else url_to_share
+        full_url_to_share = 'http://%s%s' % ((Site.objects.get_current().domain, url_to_share)) if url_to_share.find(':') == -1 else url_to_share
         url, created = URL.objects.get_or_create(
                 url=full_url_to_share,
         )
